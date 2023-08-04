@@ -117,8 +117,7 @@ class RocketchatDataSource(BaseDataSource):
         while oldest:
             r = self._rocket_chat.call_api_get("chat.syncMessages", roomId=channel.id, lastUpdate=oldest)
             json = r.json()
-            messages = json["result"].get("updated")
-            if messages:
+            if messages := json["result"].get("updated"):
                 data += messages
                 oldest = messages[0]["_updatedAt"]
             else:
@@ -134,8 +133,7 @@ class RocketchatDataSource(BaseDataSource):
             r = self._rocket_chat.call_api_get("chat.getThreadMessages", tmid=thread.id, tlm=oldest, count=20,
                                                offset=records)
             json = r.json()
-            messages = json.get("messages")
-            if messages:
+            if messages := json.get("messages"):
                 data += messages
             records = len(data)
             total = json.get("total")

@@ -45,7 +45,7 @@ class BackgroundIndexer:
     @staticmethod
     def run():
         docs_queue_instance = IndexQueue.get_instance()
-        logger.info(f'Background indexer started...')
+        logger.info('Background indexer started...')
 
         while not BackgroundIndexer._stop_event.is_set():
             try:

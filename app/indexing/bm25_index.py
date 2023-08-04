@@ -14,11 +14,11 @@ from schemas import Paragraph
 def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
     result = paragraph.content
     if paragraph.document.title is not None:
-        result += ' ' + paragraph.document.title
+        result += f' {paragraph.document.title}'
     if paragraph.document.author is not None:
-        result += ' ' + paragraph.document.author
+        result += f' {paragraph.document.author}'
     if data_source_name := paragraph.document.data_source.type.name:
-        result += ' ' + data_source_name
+        result += f' {data_source_name}'
     return result
 
 

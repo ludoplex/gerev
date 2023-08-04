@@ -25,10 +25,11 @@ class DynamicLoader:
     def extract_classes(file_path: str):
         with open(file_path, 'r') as f:
             file_ast = ast.parse(f.read())
-            classes = {}
-            for node in file_ast.body:
-                if isinstance(node, ast.ClassDef):
-                    classes[node.name] = {'node': node, 'file': file_path}
+            classes = {
+                node.name: {'node': node, 'file': file_path}
+                for node in file_ast.body
+                if isinstance(node, ast.ClassDef)
+            }
         return classes
 
     @staticmethod

@@ -81,21 +81,17 @@ class GoogleDriveDataSource(BaseDataSource):
             return False
 
         last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%f%z")
-        if last_modified < self._last_index_time:
-            return False
-
-        return True
+        return last_modified >= self._last_index_time
 
     @lru_cache(maxsize=512)
     def _get_parent_name(self, parent_id) -> str:
         # The drive api returns just 'Drive' for the names of shared drives, so just skip it.
         try:
             result = self._drive.files().get(fileId=parent_id, fields='name,parents', supportsAllDrives=True).execute()
-            if result.get('parents'):
-                parent_name = self._get_parent_name(result['parents'][0])
-                return parent_name + '/' + result['name'] if parent_name else result['name']
-            else:
+            if not result.get('parents'):
                 return result['name'] if result['name'] != 'Drive' else ''
+            parent_name = self._get_parent_name(result['parents'][0])
+            return f'{parent_name}/' + result['name'] if parent_name else result['name']
         except Exception as e:
             logging.exception(f"Error while getting folder name of id {id}")
 
@@ -150,7 +146,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 fh = io.BytesIO()
                 downloader = MediaIoBaseDownload(fh, request)
                 done = False
-                while done is False:
+                while not done:
                     status, done = downloader.next_chunk()
 
                 # write the downloaded content to a file

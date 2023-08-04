@@ -60,5 +60,5 @@ class BasicDocument:
 
     @property
     def id_in_data_source(self):
-        return str(self.data_source_id) + '_' + str(self.id)
+        return f'{str(self.data_source_id)}_{str(self.id)}'
 

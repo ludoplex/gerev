@@ -68,7 +68,7 @@ class MattermostDataSource(BaseDataSource):
         self._mattermost = Driver(options=asdict(mattermost_config))
 
     def _list_channels(self) -> List[MattermostChannel]:
-        channels = self._mattermost.channels.client.get(f"/users/me/channels")
+        channels = self._mattermost.channels.client.get("/users/me/channels")
         return [MattermostChannel(id=channel["id"], name=channel["name"], team_id=channel["team_id"])
                 for channel in channels]
 
@@ -85,8 +85,7 @@ class MattermostDataSource(BaseDataSource):
             "page": page
         }
 
-        posts = self._mattermost.channels.client.get(endpoint, params=params)
-        return posts
+        return self._mattermost.channels.client.get(endpoint, params=params)
 
     def _feed_new_documents(self) -> None:
         self._mattermost.login()

@@ -100,10 +100,9 @@ class JiraDataSource(BaseDataSource):
 
         base_url = self._raw_config['url']
         issue_url = urllib.parse.urljoin(base_url, f"/browse/{raw_issue['key']}")
-        comments = []
         raw_comments = self._jira.issue_get_comments(issue_id)
-        for raw_comment in raw_comments['comments']:
-            comments.append(BasicDocument(
+        comments = [
+            BasicDocument(
                 id=raw_comment["id"],
                 data_source_id=self._data_source_id,
                 type=DocumentType.COMMENT,
@@ -113,9 +112,10 @@ class JiraDataSource(BaseDataSource):
                 author_image_url=raw_comment["author"]["avatarUrls"]["48x48"],
                 location=raw_issue['key'],
                 url=issue_url,
-                timestamp=dateutil.parser.parse(raw_comment["updated"])
-            ))
-
+                timestamp=dateutil.parser.parse(raw_comment["updated"]),
+            )
+            for raw_comment in raw_comments['comments']
+        ]
         author = None
         if assignee := raw_issue['fields'].get('assignee'):
             author = assignee

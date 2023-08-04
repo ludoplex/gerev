@@ -133,8 +133,7 @@ class DataSourceContext:
         data_sources: Dict[str, ClassInfo] = DynamicLoader.find_data_sources()
 
         with Session() as session:
-            for source_name in data_sources.keys():
-                class_info = data_sources[source_name]
+            for source_name, class_info in data_sources.items():
                 data_source_class = DynamicLoader.get_class(file_path=class_info.file_path,
                                                             class_name=class_info.name)
                 cls._data_source_classes[source_name] = data_source_class
