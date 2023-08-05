@@ -173,11 +173,8 @@ class BookstackDataSource(BaseDataSource):
         page_content = self._book_stack.get_page(page_id)
         author_name = page_content["created_by"]["name"]
 
-        author_image_url = ""
         author = self._book_stack.get_user(raw_page["created_by"])
-        if author:
-            author_image_url = author["avatar_url"]
-
+        author_image_url = author["avatar_url"] if author else ""
         plain_text = html_to_text(page_content["html"])
 
         url = urljoin(self._raw_config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")

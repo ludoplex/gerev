@@ -18,10 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_enum_value_or_none(enum: Optional[Enum]) -> Optional[str]:
-    if enum is None:
-        return None
-
-    return enum.value
+    return None if enum is None else enum.value
 
 
 class Indexer:
@@ -57,10 +54,12 @@ class Indexer:
         ids_in_data_source = [document.id_in_data_source for document in documents]
 
         with Session() as session:
-            documents_to_delete = session.query(Document).filter(
-                Document.id_in_data_source.in_(ids_in_data_source)).all()
-            if documents_to_delete:
-                logging.info(f'removing documents that were updated and need to be re-indexed.')
+            if (
+                documents_to_delete := session.query(Document)
+                .filter(Document.id_in_data_source.in_(ids_in_data_source))
+                .all()
+            ):
+                logging.info('removing documents that were updated and need to be re-indexed.')
                 Indexer.remove_documents(documents_to_delete, session)
                 for document in documents_to_delete:
                     # Currently bulk deleting doesn't cascade. So we need to delete them one by one.
@@ -88,26 +87,26 @@ class Indexer:
             # Create a list of all the paragraphs in the documents
             logger.info(f"Indexing {len(db_documents)} documents => {len(paragraphs)} paragraphs")
             paragraphs = [paragraph for document in db_documents for paragraph in document.paragraphs]
-            if len(paragraphs) == 0:
-                logger.info(f"No paragraphs to index")
+            if not paragraphs:
+                logger.info("No paragraphs to index")
                 return
 
             paragraph_ids = [paragraph.id for paragraph in paragraphs]
             paragraph_contents = [Indexer._add_metadata_for_indexing(paragraph) for paragraph in paragraphs]
 
-        logger.info(f"Updating BM25 index...")
+        logger.info("Updating BM25 index...")
         Bm25Index.get().update()
 
-        if len(paragraph_contents) == 0:
+        if not paragraph_contents:
             return
 
         # Encode the paragraphs
         show_progress_bar = not IS_IN_DOCKER
-        logger.info(f"Encoding with bi-encoder...")
+        logger.info("Encoding with bi-encoder...")
         embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=show_progress_bar)
 
         # Add the embeddings to the index
-        logger.info(f"Updating Faiss index...")
+        logger.info("Updating Faiss index...")
         FaissIndex.get().update(paragraph_ids, embeddings)
 
         logger.info(f"Finished indexing {len(documents)} documents => {len(paragraphs)} paragraphs")
@@ -138,7 +137,7 @@ class Indexer:
     def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
         result = paragraph.content
         if paragraph.document.title is not None:
-            result += '; ' + paragraph.document.title
+            result += f'; {paragraph.document.title}'
         return result
 
     @staticmethod
@@ -151,10 +150,10 @@ class Indexer:
         # Remove the paragraphs from the index
         paragraph_ids = [paragraph.id for paragraph in db_paragraphs]
 
-        logger.info(f"Removing documents from faiss index...")
+        logger.info("Removing documents from faiss index...")
         FaissIndex.get().remove(paragraph_ids)
 
-        logger.info(f"Removing documents from BM25 index...")
+        logger.info("Removing documents from BM25 index...")
         Bm25Index.get().update(session=session)
 
         logger.info(f"Finished removing {len(documents)} documents => {len(db_paragraphs)} paragraphs")

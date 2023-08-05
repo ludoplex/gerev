@@ -63,8 +63,6 @@ class SlackDataSource(BaseDataSource):
                 for conv in conversations['channels']]
 
     def _feed_conversations(self, conversations: List[SlackConversation]) -> List[SlackConversation]:
-        joined_conversations = []
-
         for conv in conversations:
             try:
                 result = self._slack.conversations_join(channel=conv.id)
@@ -74,7 +72,7 @@ class SlackDataSource(BaseDataSource):
             except Exception as e:
                 logger.warning(f'Could not join channel {conv.name}: {e}')
 
-        return joined_conversations
+        return []
 
     def _get_author_details(self, author_id: str) -> SlackAuthor:
         author = self._authors_cache.get(author_id, None)

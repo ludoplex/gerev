@@ -33,13 +33,15 @@ def parse_with_workers(method_name: callable, items: list, **kwargs):
     logger.info(f'Parsing {len(items)} documents using {method} (with {workers} workers)...')
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = []
-        for i in range(workers):
-            futures.append(executor.submit(_wrap_with_try_except(method), items[i::workers], **kwargs))
+        futures = [
+            executor.submit(
+                _wrap_with_try_except(method), items[i::workers], **kwargs
+            )
+            for i in range(workers)
+        ]
         concurrent.futures.wait(futures)
         for w in futures:
-            e = w.exception()
-            if e:
+            if e := w.exception():
                 logging.exception("Worker failed", exc_info=e)
 
 

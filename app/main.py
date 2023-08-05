@@ -143,7 +143,7 @@ async def check_for_new_documents_endpoint():
 @app.get("/{path:path}", include_in_schema=False)
 async def serve_ui(request: Request, path: str):
     try:
-        if path == "" or path.startswith("search"):
+        if not path or path.startswith("search"):
             file_path = os.path.join(UI_PATH, "index.html")
         else:
             file_path = os.path.join(UI_PATH, path)

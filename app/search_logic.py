@@ -116,11 +116,10 @@ class Candidate:
                               status=self.document.status,
                               is_active=self.document.is_active)
 
-        if parent_result is not None:
-            parent_result.child = result
-            return parent_result
-        else:
+        if parent_result is None:
             return result
+        parent_result.child = result
+        return parent_result
 
 
 def _cross_encode(
@@ -137,7 +136,7 @@ def _cross_encode(
 
     if use_titles:
         contents = [
-            content + ' [SEP] ' + candidate.document.title
+            f'{content} [SEP] {candidate.document.title}'
             for content, candidate in zip(contents, candidates)
         ]
 
@@ -151,12 +150,14 @@ def _cross_encode(
 def _assign_answer_sentence(candidate: Candidate, answer: str):
     paragraph_sentences = re.split(r'([\.\!\?\:\-] |[\"“\(\)])', candidate.content)
     sentence = None
-    for i, paragraph_sentence in enumerate(paragraph_sentences):
-        if answer in paragraph_sentence:
-            sentence = paragraph_sentence
-            break
-    else:
-        sentence = answer
+    sentence = next(
+        (
+            paragraph_sentence
+            for paragraph_sentence in paragraph_sentences
+            if answer in paragraph_sentence
+        ),
+        answer,
+    )
     start = candidate.content.find(sentence)
     end = start + len(sentence)
     candidate.answer_start = start

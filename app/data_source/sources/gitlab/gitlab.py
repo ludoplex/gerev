@@ -62,7 +62,7 @@ class GitlabDataSource(BaseDataSource):
 
         while True:
             try:
-                response = self._session.get(url + f"&per_page={per_page}&page={page}")
+                response = self._session.get(f"{url}&per_page={per_page}&page={page}")
                 response.raise_for_status()
                 new_items: List[Dict] = response.json()
                 items.extend(new_items)
@@ -72,7 +72,7 @@ class GitlabDataSource(BaseDataSource):
 
                 page += 1
             except:
-                logging.exception("Error while fetching items paginated for url: " + url)
+                logging.exception(f"Error while fetching items paginated for url: {url}")
 
         return items
 
@@ -99,16 +99,13 @@ class GitlabDataSource(BaseDataSource):
             return
 
         comments_url = \
-            f"{self.gitlab_config.url}/api/v4/projects/{issue['project_id']}/issues/{issue['iid']}/notes?sort=asc"
+                f"{self.gitlab_config.url}/api/v4/projects/{issue['project_id']}/issues/{issue['iid']}/notes?sort=asc"
         raw_comments = self._get_all_paginated(comments_url)
         comments = []
         issue_url = issue['web_url']
 
-        for raw_comment in raw_comments:
-            if raw_comment["system"]:
-                continue
-
-            comments.append(BasicDocument(
+        comments.extend(
+            BasicDocument(
                 id=raw_comment["id"],
                 data_source_id=self._data_source_id,
                 type=DocumentType.COMMENT,
@@ -118,9 +115,11 @@ class GitlabDataSource(BaseDataSource):
                 author_image_url=raw_comment["author"]["avatar_url"],
                 location=issue['references']['full'].replace("/", " / "),
                 url=issue_url,
-                timestamp=dateutil.parser.parse(raw_comment["updated_at"])
-            ))
-
+                timestamp=dateutil.parser.parse(raw_comment["updated_at"]),
+            )
+            for raw_comment in raw_comments
+            if not raw_comment["system"]
+        )
         status = gitlab_status_to_doc_status(issue["state"])
         is_active = status == DocumentStatus.OPEN
         doc = BasicDocument(

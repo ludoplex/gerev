@@ -27,9 +27,7 @@ class Posthog:
     def _read_uuid_file(cls) -> Optional[str]:
         if os.path.exists(UUID_PATH):
             with open(UUID_PATH, 'r') as f:
-                existing_uuid = f.read().strip()
-                return existing_uuid
-
+                return f.read().strip()
         return []
 
     @classmethod

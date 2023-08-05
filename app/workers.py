@@ -14,7 +14,7 @@ class Workers:
 
     @classmethod
     def start(cls):
-        for i in range(cls.WORKER_AMOUNT):
+        for _ in range(cls.WORKER_AMOUNT):
             cls._threads.append(threading.Thread(target=cls.run))
         for thread in cls._threads:
             thread.start()
@@ -33,7 +33,7 @@ class Workers:
     @staticmethod
     def run():
         task_queue = TaskQueue.get_instance()
-        logger.info(f'Worker started...')
+        logger.info('Worker started...')
 
         while not Workers._stop_event.is_set():
             task_item: TaskQueueItem = task_queue.get_task()
@@ -52,7 +52,7 @@ class Workers:
                     task_data.attempts -= 1
 
                     if task_data.attempts == 0:
-                        logger.error(f'max attempts reached, dropping')
+                        logger.error('max attempts reached, dropping')
                         task_queue.ack_failed(id=task_item.queue_item_id)
                     else:
                         task_queue.update(id=task_item.queue_item_id, item=task_data)
